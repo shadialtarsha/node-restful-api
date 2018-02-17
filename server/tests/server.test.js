@@ -5,7 +5,9 @@ const { ObjectID } = require('mongodb');
 const { app } = require('./../server');
 const { Todo } = require('./../models/todo');
 
-let TestId;
+let testId;
+let testCompleted;
+let testCompletedAt;
 
 const todos = [
     { text: 'First test todo' },
@@ -17,7 +19,9 @@ beforeEach((done) => {
         return Todo.insertMany(todos);
     }).then(() => {
         return Todo.findOne().then((todo) => {
-            TestId = todo._id.toHexString();
+            testId = todo._id.toHexString();
+            testCompleted = todo.completed;
+            testCompletedAt = todo.completedAt;
         })
     }).then(() => done());
 });
@@ -41,8 +45,8 @@ describe('POST /todos', () => {
             .post('/todos')
             .send({ text })
             .expect(200)
-            .expect((req, res) => {
-                expect(req.body.text).toBe(text);
+            .expect((res) => {
+                expect(res.body.text).toBe(text);
             })
             .end((err, res) => {
                 if (err) {
@@ -80,7 +84,7 @@ describe('POST /todos', () => {
 describe('GET /todos/:id', () => {
     it('should return todo doc', (done) => {
         request(app)
-            .get(`/todos/${TestId}`)
+            .get(`/todos/${testId}`)
             .expect(200)
             .expect((res) => {
                 expect(res.body.todo.text).toBe(todos[0].text);
@@ -90,7 +94,7 @@ describe('GET /todos/:id', () => {
 
     it('should return 404 if id is invalid', (done) => {
         request(app)
-            .get(`/todos/${TestId + 21}`)
+            .get(`/todos/${testId + 21}`)
             .expect(404)
             .end(done);
     });
@@ -108,7 +112,7 @@ describe('GET /todos/:id', () => {
 describe('DELETE /todos/:id', () => {
     it('should delete todo doc', (done) => {
         request(app)
-            .delete(`/todos/${TestId}`)
+            .delete(`/todos/${testId}`)
             .expect(200)
             .expect((res) => {
                 expect(res.body.todo.text).toBe(todos[0].text);
@@ -117,7 +121,7 @@ describe('DELETE /todos/:id', () => {
                 if (err) {
                     return done(err);
                 }
-                Todo.findById(TestId).then((todo) => {
+                Todo.findById(testId).then((todo) => {
                     expect(todo).toNotExist();
                     done();
                 }).catch((err) => done(err));
@@ -134,8 +138,37 @@ describe('DELETE /todos/:id', () => {
 
     it('should return 404 if id is invalid', (done) => {
         request(app)
-            .delete(`/todos/${TestId + 21}`)
+            .delete(`/todos/${testId + 21}`)
             .expect(404)
+            .end(done);
+    });
+});
+
+describe('PATCH /todos/:id', () => {
+    it('should update todo doc', (done) => {
+        const text = 'new text';
+        request(app)
+            .patch(`/todos/${testId}`)
+            .send({ text, completed: true })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toBe(text);
+                expect(res.body.todo.completed).toBe(true);
+                expect(res.body.todo.completedAt).toBeA('number');
+            })
+            .end(done);
+    });
+
+    it('should clear completedAt when todo is not completed', (done) => {
+        request(app)
+            .patch(`/todos/${testId}`)
+            .send({ text: 'new text!!!', completed: false })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toNotBe(todos[0].text);
+                expect(res.body.todo.completed).toBe(false);
+                expect(res.body.todo.completedAt).toNotExist();
+            })
             .end(done);
     });
 });
