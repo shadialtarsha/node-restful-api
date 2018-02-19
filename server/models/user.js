@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
-const bycrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs');
 
 const userSchema = mongoose.Schema({
     email: {
@@ -64,10 +64,24 @@ userSchema.statics.findByToken = function(token) {
     });
 };
 
+userSchema.statics.findByCredentials = function(email, password) {
+    return this.findOne({ email }).then((user) => {
+        if (!user) {
+            return Promise.reject();
+        }
+        return new Promise((resolve, reject) => {
+            bcrypt.compare(password, user.password, (err, res) => {
+                if (res) resolve(user);
+                else reject();
+            });
+        });
+    });
+};
+
 userSchema.pre('save', function(next) {
     if (this.isModified('password')) {
-        bycrypt.genSalt(10, (err, salt) => {
-            bycrypt.hash(this.password, salt, (err, hash) => {
+        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(this.password, salt, (err, hash) => {
                 this.password = hash;
                 next();
             });
