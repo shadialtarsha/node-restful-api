@@ -1,6 +1,31 @@
-# Node Todo API
-Node.js app with Mongodb and Express.js <br>
-<br>
-This back-end app provided a RESTful web API with authentication for users using [jsonwebtoken](https://jwt.io/) and 
-[bcryptjs](https://www.npmjs.com/package/bcryptjs). <br>
-For Testing, I used [mochajs](https://mochajs.org/), [expect](https://facebook.github.io/jest/docs/en/expect.html), and [supertest](https://github.com/visionmedia/supertest). 
+# NodeJS RESTful API
+A simple example for RESTful API powered with JWT.
+
+# Requirements
+You need to add a config.json file to config folder. For example:
+```JSON
+{
+    "development": {
+        "PORT": 3000,
+        "MONGODB_URI": "mongodb://localhost:27017/node-restful-api",
+        "JWT_SECRET": "123abcefg1232222"
+    },
+    "test": {
+        "PORT": 3000,
+        "MONGODB_URI": "mongodb://localhost:27017/node-restful-api-test",
+        "JWT_SECRET": "123abcefg1232222"
+    }
+}
+```
+# Technologies
+* NodeJs
+* ExpressJs
+* MongoDB
+* Mongoose
+* JWT - JSON web token
+* bcryptjs - for password encryption
+* validator
+* lodash
+* Mocha - for testing
+* expect - assertions library
+* supertest - for ExpressJs testing
